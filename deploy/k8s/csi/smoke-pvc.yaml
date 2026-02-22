@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kube-pfs-smoke-pvc
+  namespace: kube-pfs-test
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: kube-pfs-sc
+  resources:
+    requests:
+      storage: 1Gi

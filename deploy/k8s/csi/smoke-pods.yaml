@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-pfs-writer
+  namespace: kube-pfs-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: writer
+      image: alpine:3.21
+      command: ["/bin/sh", "-c", "echo day2-smoke > /data/probe.txt && sleep 5"]
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: kube-pfs-smoke-pvc
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-pfs-reader
+  namespace: kube-pfs-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: reader
+      image: alpine:3.21
+      command: ["/bin/sh", "-c", "cat /data/probe.txt"]
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: kube-pfs-smoke-pvc
