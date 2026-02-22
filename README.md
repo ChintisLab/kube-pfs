@@ -1,52 +1,51 @@
 # kube-pfs
 
-A Kubernetes CSI driver project for a simulated parallel file system, built in an approval-gated learning workflow.
+I am building `kube-pfs`, a Kubernetes CSI driver project for a simulated parallel file system.  
+I am developing it in small, reviewable steps so I can test and explain each part before moving forward.
 
-## Project Goal
+## Why I am building this
 
-`kube-pfs` models the core control/data-plane ideas used by parallel file systems:
+I want this project to demonstrate hands-on understanding of:
 
-- CSI controller and node plugins for Kubernetes volume lifecycle
-- Metadata service (MDS) for namespace and stripe decisions
-- Object storage targets (OSTs) for striped block reads/writes
-- Observability and benchmarking from day one
-- Fault injection to study degraded behavior under stress
+- CSI controller and node plugin behavior in Kubernetes
+- metadata/data plane separation (MDS + OST model)
+- FUSE and mount workflow integration
+- observability, benchmarking, and fault behavior
 
-This repository is structured so you can learn each layer before approving the next implementation step.
+## Current status
 
-## Current Status
+I have completed Day 1 groundwork:
 
-Day 1 groundwork is in place:
+- local prerequisites and environment checks
+- setup automation scripts
+- kind cluster bootstrap manifests
+- repository scaffolding
+- protobuf API contracts for MDS and OST services
+- sanity checks for tooling, proto reproducibility, and smoke image builds
 
-- prerequisites and local setup automation
-- kind cluster bootstrap targets
-- repository skeleton
-- protobuf service contracts for MDS and OST
-- sanity checks for tooling, proto reproducibility, and image build pipeline
+I will start Day 2 implementation only after explicit approval.
 
-Day 2 implementation (runtime services + CSI flow) starts only after your explicit approval.
-
-## Architecture (target)
+## Target architecture
 
 ```text
-Kubernetes Pods
-  -> CSI Node Plugin (FUSE mount path)
+Pods
+  -> CSI Node Plugin (mount path)
   -> MetadataService (MDS)
   -> ObjectStorageService (OST shards)
   -> Prometheus/Grafana + benchmark/fault tooling
 ```
 
-## Repository Layout
+## Repository layout
 
-- `cmd/`: service entrypoints (`mds`, `ost`, `csi-controller`, `csi-node`)
+- `cmd/`: binary entrypoints (`mds`, `ost`, `csi-controller`, `csi-node`)
 - `proto/`: protobuf contracts
 - `pkg/proto/gen/`: generated Go stubs
 - `deploy/k8s/`: local cluster and namespace manifests
 - `scripts/dev/`: setup and sanity scripts
-- `hack/docker/smoke/`: baseline container smoke build assets
+- `hack/docker/smoke/`: smoke container assets
 - `docs/`: prerequisites, contracts, conventions, sanity notes
 
-## Local Development Quick Start
+## Local quickstart (my workflow)
 
 1. Install dependencies:
 
@@ -54,20 +53,20 @@ Kubernetes Pods
 ./scripts/dev/bootstrap-macos.sh
 ```
 
-2. Validate your machine:
+2. Validate prerequisites:
 
 ```bash
 make doctor
 ```
 
-3. Start local Kubernetes:
+3. Bring up local cluster:
 
 ```bash
 make cluster-up
 make ns-init
 ```
 
-4. Validate generated contracts and smoke pipeline:
+4. Validate contracts and baseline checks:
 
 ```bash
 make proto-gen
@@ -75,55 +74,61 @@ make compile-check
 make sanity
 ```
 
-5. Tear down cluster when done:
+5. Tear down when done:
 
 ```bash
 make cluster-down
 ```
 
-## Core Commands
+## Commands I use most
 
-- `make print-required-versions`: print expected tool versions
-- `make check-prereqs`: strict local environment verification
-- `make doctor`: wrapper for prerequisite checks
-- `make install-tools-macos`: install local tools using bootstrap script
-- `make cluster-up`: create `kind` cluster `kube-pfs`
-- `make cluster-down`: delete `kind` cluster `kube-pfs`
-- `make ns-init`: apply `kube-pfs-system` and `kube-pfs-test` namespaces
-- `make proto-gen`: generate Go protobuf and gRPC stubs
-- `make compile-check`: run `go test ./...`
-- `make sanity`: run all Day 1 sanity checks
+- `make print-required-versions`
+- `make check-prereqs`
+- `make doctor`
+- `make install-tools-macos`
+- `make cluster-up`
+- `make cluster-down`
+- `make ns-init`
+- `make proto-gen`
+- `make compile-check`
+- `make sanity`
 
-## Troubleshooting
+## Troubleshooting notes
 
-### `go is not installed or not in PATH`
+### Go missing
 
-- Install Go: `brew install go`
-- Verify: `go version`
-- Re-run: `make check-prereqs`
+```bash
+brew install go
+go version
+make check-prereqs
+```
 
-### `protoc-gen-go is missing`
-
-- Install plugins:
+### Protobuf plugins missing
 
 ```bash
 go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.0
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
-```
-
-- Ensure Go tools are in PATH:
-
-```bash
 export PATH="$(go env GOPATH)/bin:$PATH"
 ```
 
-### `Cannot connect to the Docker daemon`
+### Docker daemon not reachable
 
-- Start Docker Desktop
-- Check daemon status: `docker info`
-- Re-run sanity checks after daemon is healthy
+```bash
+docker info
+```
 
-### `kind: command not found`
+If that fails, I start Docker Desktop and rerun sanity checks.
 
-- Install: `brew install kind`
-- Verify: `kind version`
+### kind missing
+
+```bash
+brew install kind
+kind version
+```
+
+## How I am working
+
+- I move step-by-step with approval gates.
+- I run local checks before starting new implementation work.
+- I keep comments practical and human, focused on intent and tradeoffs.
+- I push incremental commits with sensible scope.
