@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package kubepfs.v1;
+
+option go_package = "github.com/rachanaanugandula/kube-pfs/pkg/proto/gen;protogen";
+
+service MetadataService {
+  rpc Create(CreateRequest) returns (CreateResponse);
+  rpc Lookup(LookupRequest) returns (LookupResponse);
+  rpc Stat(StatRequest) returns (StatResponse);
+  rpc ListDir(ListDirRequest) returns (ListDirResponse);
+  rpc Unlink(UnlinkRequest) returns (UnlinkResponse);
+}
+
+message StripeLayout {
+  uint32 stripe_size_bytes = 1;
+  repeated string ost_ids = 2;
+}
+
+message Inode {
+  string inode_id = 1;
+  string parent_inode_id = 2;
+  string name = 3;
+  bool is_dir = 4;
+  uint64 size_bytes = 5;
+  uint64 mode = 6;
+  int64 created_unix = 7;
+  int64 modified_unix = 8;
+  StripeLayout stripe_layout = 9;
+}
+
+message CreateRequest {
+  string parent_inode_id = 1;
+  string name = 2;
+  bool is_dir = 3;
+  uint64 mode = 4;
+}
+
+message CreateResponse {
+  Inode inode = 1;
+}
+
+message LookupRequest {
+  string parent_inode_id = 1;
+  string name = 2;
+}
+
+message LookupResponse {
+  Inode inode = 1;
+}
+
+message StatRequest {
+  string inode_id = 1;
+}
+
+message StatResponse {
+  Inode inode = 1;
+}
+
+message ListDirRequest {
+  string inode_id = 1;
+}
+
+message ListDirResponse {
+  repeated Inode entries = 1;
+}
+
+message UnlinkRequest {
+  string parent_inode_id = 1;
+  string name = 2;
+}
+
+message UnlinkResponse {
+  bool deleted = 1;
+}

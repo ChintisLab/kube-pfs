@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package kubepfs.v1;
+
+option go_package = "github.com/rachanaanugandula/kube-pfs/pkg/proto/gen;protogen";
+
+service ObjectStorageService {
+  rpc WriteBlock(WriteBlockRequest) returns (WriteBlockResponse);
+  rpc ReadBlock(ReadBlockRequest) returns (ReadBlockResponse);
+  rpc DeleteBlock(DeleteBlockRequest) returns (DeleteBlockResponse);
+  rpc GetHealth(HealthRequest) returns (HealthResponse);
+}
+
+message BlockRef {
+  string file_id = 1;
+  uint64 chunk_id = 2;
+  string ost_id = 3;
+}
+
+message WriteBlockRequest {
+  BlockRef block = 1;
+  bytes data = 2;
+}
+
+message WriteBlockResponse {
+  uint64 bytes_written = 1;
+}
+
+message ReadBlockRequest {
+  BlockRef block = 1;
+  uint64 offset = 2;
+  uint64 length = 3;
+}
+
+message ReadBlockResponse {
+  bytes data = 1;
+}
+
+message DeleteBlockRequest {
+  BlockRef block = 1;
+}
+
+message DeleteBlockResponse {
+  bool deleted = 1;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string ost_id = 1;
+  bool healthy = 2;
+  uint64 iops_total = 3;
+  uint64 throughput_bytes = 4;
+}
