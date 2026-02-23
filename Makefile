@@ -18,7 +18,9 @@ GO_ENV := GOCACHE=$(GO_CACHE_DIR) GOMODCACHE=$(GO_MOD_CACHE_DIR)
 .PHONY: cluster-up cluster-down ns-init
 .PHONY: proto-check-tools proto-gen compile-check
 .PHONY: sanity-tooling sanity-proto-repro sanity-container-smoke sanity
-.PHONY: build-day2 smoke
+.PHONY: build-day2 build-day3 smoke
+.PHONY: observability-up benchmark fault-delete fault-netem fault-corrupt
+.PHONY: fault-timeline fault-timeline-follow fault-timeline-clear
 
 print-required-versions:
 	@echo "Required versions (minimum unless noted):"
@@ -168,9 +170,55 @@ build-day2:
 	mkdir -p "$(GO_CACHE_DIR)" "$(GO_MOD_CACHE_DIR)"; \
 	$(GO_ENV) go build ./cmd/mds ./cmd/ost ./cmd/csi-controller ./cmd/csi-node
 
+build-day3:
+	@set -euo pipefail; \
+	mkdir -p "$(GO_CACHE_DIR)" "$(GO_MOD_CACHE_DIR)"; \
+	$(GO_ENV) go build ./cmd/mds ./cmd/ost ./cmd/csi-controller ./cmd/csi-node ./cmd/fault-injector
+
 smoke:
 	@set -euo pipefail; \
 	./scripts/dev/smoke-day2.sh
+
+observability-up:
+	@set -euo pipefail; \
+	kubectl apply -f deploy/observability/prometheus.yaml; \
+	kubectl apply -f deploy/observability/grafana.yaml
+
+benchmark:
+	@set -euo pipefail; \
+	./scripts/bench/run-day3-bench.sh
+
+fault-delete:
+	@set -euo pipefail; \
+	$(GO_ENV) go run ./cmd/fault-injector delete-pod --name $${POD:?set POD=} --namespace $${NAMESPACE:-kube-pfs-system}
+
+fault-netem:
+	@set -euo pipefail; \
+	$(GO_ENV) go run ./cmd/fault-injector netem-delay --pod $${POD:?set POD=} --namespace $${NAMESPACE:-kube-pfs-system} --delay $${DELAY:-200ms}
+
+fault-corrupt:
+	@set -euo pipefail; \
+	$(GO_ENV) go run ./cmd/fault-injector corrupt-block --path $${PATH_TO_BLOCK:?set PATH_TO_BLOCK=} --bytes $${CORRUPT_BYTES:-256}
+
+fault-timeline:
+	@set -euo pipefail; \
+	if [[ -f artifacts/faults/timeline.jsonl ]]; then \
+		tail -n $${LINES:-20} artifacts/faults/timeline.jsonl; \
+	else \
+		echo "No timeline file found at artifacts/faults/timeline.jsonl"; \
+	fi
+
+fault-timeline-follow:
+	@set -euo pipefail; \
+	mkdir -p artifacts/faults; \
+	touch artifacts/faults/timeline.jsonl; \
+	tail -f artifacts/faults/timeline.jsonl
+
+fault-timeline-clear:
+	@set -euo pipefail; \
+	mkdir -p artifacts/faults; \
+	: > artifacts/faults/timeline.jsonl; \
+	echo "Cleared artifacts/faults/timeline.jsonl"
 
 sanity-tooling:
 	@./scripts/dev/sanity-tooling.sh
