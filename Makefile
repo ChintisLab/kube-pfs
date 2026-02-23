@@ -10,11 +10,15 @@ HELM_REQUIRED_MAJOR := 3
 HELM_REQUIRED_MINOR_MIN := 16
 FIO_REQUIRED_MAJOR := 3
 PROTOC_REQUIRED_MAJOR := 25
+GO_CACHE_DIR := $(PWD)/.cache/go-build
+GO_MOD_CACHE_DIR := $(PWD)/.cache/go-mod
+GO_ENV := GOCACHE=$(GO_CACHE_DIR) GOMODCACHE=$(GO_MOD_CACHE_DIR)
 
 .PHONY: print-required-versions check-prereqs doctor install-tools-macos
 .PHONY: cluster-up cluster-down ns-init
 .PHONY: proto-check-tools proto-gen compile-check
 .PHONY: sanity-tooling sanity-proto-repro sanity-container-smoke sanity
+.PHONY: build-day2 smoke
 
 print-required-versions:
 	@echo "Required versions (minimum unless noted):"
@@ -143,6 +147,7 @@ ns-init:
 
 proto-check-tools:
 	@set -euo pipefail; \
+	mkdir -p "$(GO_CACHE_DIR)" "$(GO_MOD_CACHE_DIR)"; \
 	command -v protoc >/dev/null 2>&1 || { echo "protoc is missing. Install with: brew install protobuf"; exit 1; }; \
 	command -v go >/dev/null 2>&1 || { echo "go is missing. Install with: brew install go"; exit 1; }; \
 	command -v protoc-gen-go >/dev/null 2>&1 || { echo "protoc-gen-go is missing. Run: go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.0"; exit 1; }; \
@@ -154,8 +159,18 @@ proto-gen: proto-check-tools
 
 compile-check:
 	@set -euo pipefail; \
+	mkdir -p "$(GO_CACHE_DIR)" "$(GO_MOD_CACHE_DIR)"; \
 	command -v go >/dev/null 2>&1 || { echo "go is missing. Install with: brew install go"; exit 1; }; \
-	go test ./...
+	$(GO_ENV) go test ./...
+
+build-day2:
+	@set -euo pipefail; \
+	mkdir -p "$(GO_CACHE_DIR)" "$(GO_MOD_CACHE_DIR)"; \
+	$(GO_ENV) go build ./cmd/mds ./cmd/ost ./cmd/csi-controller ./cmd/csi-node
+
+smoke:
+	@set -euo pipefail; \
+	./scripts/dev/smoke-day2.sh
 
 sanity-tooling:
 	@./scripts/dev/sanity-tooling.sh
