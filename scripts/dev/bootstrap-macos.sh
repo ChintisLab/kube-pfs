@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 set -euo pipefail
 
-# We only support macOS in this helper because the local workflow is built around Homebrew.
+# I only support macOS in this helper because my local workflow is built around Homebrew.
 if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "This bootstrap script is intended for macOS."
   exit 1
@@ -15,11 +15,11 @@ fi
 echo "Installing kube-pfs local dependencies via Homebrew..."
 brew install go kind helm fio protobuf
 
-# These plugin binaries are needed for protobuf generation in Step 4.
+# I install these plugin binaries because I need them for protobuf generation.
 go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.0
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
 
-# Go installs tools to GOPATH/bin. Add it to PATH if this shell cannot find them.
+# I add GOPATH/bin when this shell cannot find the Go tool binaries.
 GOBIN_PATH="$(go env GOPATH)/bin"
 if [[ ":${PATH}:" != *":${GOBIN_PATH}:"* ]]; then
   echo "Add this to your shell profile (~/.zshrc):"

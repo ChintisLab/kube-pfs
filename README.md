@@ -14,7 +14,9 @@ I want this project to demonstrate hands-on understanding of:
 
 ## Current status
 
-I have completed Day 1 groundwork:
+I have completed Day 1 groundwork and Day 2 MVP development.
+
+### Day 1 groundwork
 
 - local prerequisites and environment checks
 - setup automation scripts
@@ -23,7 +25,12 @@ I have completed Day 1 groundwork:
 - protobuf API contracts for MDS and OST services
 - sanity checks for tooling, proto reproducibility, and smoke image builds
 
-I will start Day 2 implementation only after explicit approval.
+### Day 2 MVP
+
+- Metadata service (`Create`, `Lookup`, `Stat`, `ListDir`, `Unlink`) with BoltDB-backed persistence
+- Object storage service (`WriteBlock`, `ReadBlock`, `DeleteBlock`, `GetHealth`) with flat-file block storage
+- CSI controller and node service binaries for local iteration
+- Day 2 smoke test for create/write/read/unlink behavior
 
 ## Target architecture
 
@@ -92,6 +99,8 @@ make cluster-down
 - `make proto-gen`
 - `make compile-check`
 - `make sanity`
+- `make build-day2`
+- `make smoke`
 
 ## Troubleshooting notes
 

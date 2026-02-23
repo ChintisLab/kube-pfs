@@ -23,7 +23,7 @@ fi
 
 mkdir -p pkg/proto/gen
 
-# We generate both message types and service stubs in one command to keep outputs in sync.
+# I generate message types and service stubs together so outputs stay in sync.
 protoc \
   --proto_path=proto \
   --go_out=pkg/proto/gen --go_opt=paths=source_relative \

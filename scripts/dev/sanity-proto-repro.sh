@@ -24,7 +24,7 @@ hash_generated() {
   done <<< "${files}" | shasum -a 256 | awk '{print $1}'
 }
 
-# Two back-to-back generations should produce identical files.
+# I expect two back-to-back generations to produce identical files.
 make proto-gen
 first_hash=$(hash_generated)
 
