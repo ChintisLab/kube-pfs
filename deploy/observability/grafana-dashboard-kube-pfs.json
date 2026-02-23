@@ -1,0 +1,48 @@
+{
+  "title": "kube-pfs Day 3 Dashboard",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Write Latency (p95)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(pfs_write_latency_seconds_bucket[5m])) by (le, node))"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+    },
+    {
+      "type": "timeseries",
+      "title": "Read Throughput",
+      "targets": [
+        {
+          "expr": "sum(rate(pfs_read_throughput_bytes[5m])) by (node)"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+    },
+    {
+      "type": "timeseries",
+      "title": "IOPS",
+      "targets": [
+        {
+          "expr": "sum(rate(pfs_iops_total[5m])) by (node, op)"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+    },
+    {
+      "type": "timeseries",
+      "title": "MDS Lock Contention",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(pfs_mds_lock_contention_seconds_bucket[5m])) by (le))"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+    }
+  ]
+}

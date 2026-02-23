@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-pfs-grafana
+  namespace: kube-pfs-observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kube-pfs-grafana
+  template:
+    metadata:
+      labels:
+        app: kube-pfs-grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:11.3.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_DISABLE_LOGIN_FORM
+              value: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-pfs-grafana
+  namespace: kube-pfs-observability
+spec:
+  selector:
+    app: kube-pfs-grafana
+  ports:
+    - port: 3000
+      targetPort: 3000
