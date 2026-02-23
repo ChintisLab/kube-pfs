@@ -14,7 +14,7 @@ I want this project to demonstrate hands-on understanding of:
 
 ## Current status
 
-I have completed Day 1 groundwork and Day 2 MVP development.
+I have completed Day 1 groundwork, Day 2 MVP development, and Day 3 implementation.
 
 ### Day 1 groundwork
 
@@ -31,6 +31,15 @@ I have completed Day 1 groundwork and Day 2 MVP development.
 - Object storage service (`WriteBlock`, `ReadBlock`, `DeleteBlock`, `GetHealth`) with flat-file block storage
 - CSI controller and node service binaries for local iteration
 - Day 2 smoke test for create/write/read/unlink behavior
+
+### Day 3 implementation
+
+- Prometheus metrics endpoints on MDS, OST, CSI controller, and CSI node
+- Metrics emitted for write latency, read throughput, IOPS, CSI ops, and MDS lock contention
+- Fault injector CLI for pod kill, netem delay, and block corruption with timeline logging
+- Benchmark runner (`fio` + optional `mdtest`) with timestamped artifacts
+- GitHub Actions for CI checks and scheduled/manual benchmark artifacts
+- Operations runbook and observability manifests
 
 ## Target architecture
 
@@ -100,7 +109,16 @@ make cluster-down
 - `make compile-check`
 - `make sanity`
 - `make build-day2`
+- `make build-day3`
 - `make smoke`
+- `make observability-up`
+- `make benchmark`
+- `make fault-delete POD=kube-pfs-grafana-abcde NAMESPACE=kube-pfs-observability`
+- `make fault-netem POD=ost-0 NAMESPACE=kube-pfs-system DELAY=250ms`
+- `make fault-corrupt PATH_TO_BLOCK=artifacts/faults/demo.blk CORRUPT_BYTES=512`
+- `make fault-timeline`
+- `make fault-timeline-follow`
+- `make fault-timeline-clear`
 
 ## Troubleshooting notes
 
