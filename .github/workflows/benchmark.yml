@@ -1,0 +1,27 @@
+name: day3-benchmark
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install fio
+        run: sudo apt-get update && sudo apt-get install -y fio
+
+      - name: Run benchmark suite
+        run: |
+          chmod +x scripts/bench/run-day3-bench.sh
+          ./scripts/bench/run-day3-bench.sh
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: day3-benchmarks
+          path: artifacts/bench

@@ -1,0 +1,53 @@
+name: day3-ci
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+
+      - name: Download modules
+        run: go mod download
+
+      - name: Build Day 3 binaries
+        run: make build-day3
+
+      - name: Run compile checks
+        run: make compile-check
+
+      - name: Run Day 2 smoke test
+        run: make smoke
+
+  kind-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.32.0'
+
+      - name: Set up kind
+        uses: helm/kind-action@v1.10.0
+        with:
+          cluster_name: kube-pfs
+          config: deploy/k8s/kind-config.yaml
+
+      - name: Verify cluster baseline
+        run: |
+          kubectl get nodes
+          kubectl apply -f deploy/k8s/namespaces.yaml
+          kubectl get ns kube-pfs-system kube-pfs-test
