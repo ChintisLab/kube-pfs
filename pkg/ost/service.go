@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/rachanaanugandula/kube-pfs/pkg/metrics"
 	protogen "github.com/rachanaanugandula/kube-pfs/pkg/proto/gen"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -40,7 +41,7 @@ func NewService(ostID, dataDir string) (*Service, error) {
 
 func (s *Service) WriteBlock(_ context.Context, req *protogen.WriteBlockRequest) (*protogen.WriteBlockResponse, error) {
 	start := time.Now()
-	defer s.observe(len(req.GetData()), start)
+	defer s.observe("write", len(req.GetData()), start)
 
 	if req.GetBlock() == nil {
 		return nil, status.Error(codes.InvalidArgument, "block is required")
@@ -57,7 +58,7 @@ func (s *Service) WriteBlock(_ context.Context, req *protogen.WriteBlockRequest)
 
 func (s *Service) ReadBlock(_ context.Context, req *protogen.ReadBlockRequest) (*protogen.ReadBlockResponse, error) {
 	start := time.Now()
-	defer s.observe(0, start)
+	defer s.observe("read", 0, start)
 
 	if req.GetBlock() == nil {
 		return nil, status.Error(codes.InvalidArgument, "block is required")
@@ -78,12 +79,13 @@ func (s *Service) ReadBlock(_ context.Context, req *protogen.ReadBlockRequest) (
 	if req.GetLength() > 0 && req.GetLength() < uint64(len(blob)) {
 		blob = blob[:req.GetLength()]
 	}
+	metrics.AddReadThroughput("ost", s.ostID, len(blob))
 	return &protogen.ReadBlockResponse{Data: blob}, nil
 }
 
 func (s *Service) DeleteBlock(_ context.Context, req *protogen.DeleteBlockRequest) (*protogen.DeleteBlockResponse, error) {
 	start := time.Now()
-	defer s.observe(0, start)
+	defer s.observe("delete", 0, start)
 
 	if req.GetBlock() == nil {
 		return nil, status.Error(codes.InvalidArgument, "block is required")
@@ -114,8 +116,12 @@ func (s *Service) blockPath(ref *protogen.BlockRef) string {
 	return filepath.Join(s.dataDir, fileID, chunkID+".blk")
 }
 
-func (s *Service) observe(bytes int, started time.Time) {
+func (s *Service) observe(op string, bytes int, started time.Time) {
 	s.iopsTotal.Add(1)
+	metrics.IncIOPS("ost", s.ostID, op)
+	if op == "write" {
+		metrics.ObserveWriteLatency("ost", s.ostID, time.Since(started))
+	}
 	if bytes > 0 {
 		s.bytesTotal.Add(uint64(bytes))
 	}

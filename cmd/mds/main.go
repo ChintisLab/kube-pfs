@@ -8,15 +8,17 @@ import (
 	"strings"
 
 	"github.com/rachanaanugandula/kube-pfs/pkg/mds"
+	"github.com/rachanaanugandula/kube-pfs/pkg/metrics"
 	protogen "github.com/rachanaanugandula/kube-pfs/pkg/proto/gen"
 	"google.golang.org/grpc"
 )
 
 func main() {
 	var (
-		listenAddr = flag.String("listen", ":50051", "gRPC listen address")
-		boltPath   = flag.String("bolt-path", "./data/mds.db", "BoltDB path")
-		ostIDsRaw  = flag.String("ost-ids", "ost-0,ost-1,ost-2", "comma-separated OST IDs")
+		listenAddr  = flag.String("listen", ":50051", "gRPC listen address")
+		metricsAddr = flag.String("metrics-listen", ":9101", "metrics listen address")
+		boltPath    = flag.String("bolt-path", "./data/mds.db", "BoltDB path")
+		ostIDsRaw   = flag.String("ost-ids", "ost-0,ost-1,ost-2", "comma-separated OST IDs")
 	)
 	flag.Parse()
 
@@ -34,6 +36,9 @@ func main() {
 		log.Fatalf("init mds service: %v", err)
 	}
 	defer svc.Close()
+
+	_ = metrics.StartServer(*metricsAddr)
+	log.Printf("mds metrics listening on %s", *metricsAddr)
 
 	lis, err := net.Listen("tcp", *listenAddr)
 	if err != nil {

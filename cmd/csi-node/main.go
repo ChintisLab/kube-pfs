@@ -11,17 +11,23 @@ import (
 
 	csipb "github.com/container-storage-interface/spec/lib/go/csi"
 	kcsisvc "github.com/rachanaanugandula/kube-pfs/pkg/csi"
+	"github.com/rachanaanugandula/kube-pfs/pkg/metrics"
 	"google.golang.org/grpc"
 )
 
 func main() {
 	var (
-		socketPath string
-		nodeID     string
+		socketPath  string
+		nodeID      string
+		metricsAddr string
 	)
 	flag.StringVar(&socketPath, "endpoint", "unix:///tmp/kube-pfs-csi-node.sock", "CSI endpoint")
 	flag.StringVar(&nodeID, "node-id", "kube-pfs-node", "node ID")
+	flag.StringVar(&metricsAddr, "metrics-listen", ":9104", "metrics listen address")
 	flag.Parse()
+
+	_ = metrics.StartServer(metricsAddr)
+	log.Printf("csi-node metrics listening on %s", metricsAddr)
 
 	lis, err := listenUnix(socketPath)
 	if err != nil {

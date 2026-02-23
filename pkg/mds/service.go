@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/rachanaanugandula/kube-pfs/pkg/metrics"
 	protogen "github.com/rachanaanugandula/kube-pfs/pkg/proto/gen"
 	"go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
@@ -144,7 +145,9 @@ func (s *Service) loadOrInitRoot(defaultMode uint64) error {
 }
 
 func (s *Service) Create(_ context.Context, req *protogen.CreateRequest) (*protogen.CreateResponse, error) {
+	waitStart := time.Now()
 	s.mu.Lock()
+	metrics.ObserveMDSLockContention(time.Since(waitStart))
 	defer s.mu.Unlock()
 
 	if req.GetParentInodeId() == "" || req.GetName() == "" {
@@ -200,7 +203,9 @@ func (s *Service) Create(_ context.Context, req *protogen.CreateRequest) (*proto
 }
 
 func (s *Service) Lookup(_ context.Context, req *protogen.LookupRequest) (*protogen.LookupResponse, error) {
+	waitStart := time.Now()
 	s.mu.RLock()
+	metrics.ObserveMDSLockContention(time.Since(waitStart))
 	defer s.mu.RUnlock()
 
 	entries, ok := s.dirents[req.GetParentInodeId()]
@@ -216,7 +221,9 @@ func (s *Service) Lookup(_ context.Context, req *protogen.LookupRequest) (*proto
 }
 
 func (s *Service) Stat(_ context.Context, req *protogen.StatRequest) (*protogen.StatResponse, error) {
+	waitStart := time.Now()
 	s.mu.RLock()
+	metrics.ObserveMDSLockContention(time.Since(waitStart))
 	defer s.mu.RUnlock()
 	inode, ok := s.inodes[req.GetInodeId()]
 	if !ok {
@@ -226,7 +233,9 @@ func (s *Service) Stat(_ context.Context, req *protogen.StatRequest) (*protogen.
 }
 
 func (s *Service) ListDir(_ context.Context, req *protogen.ListDirRequest) (*protogen.ListDirResponse, error) {
+	waitStart := time.Now()
 	s.mu.RLock()
+	metrics.ObserveMDSLockContention(time.Since(waitStart))
 	defer s.mu.RUnlock()
 	children, ok := s.dirents[req.GetInodeId()]
 	if !ok {
@@ -251,7 +260,9 @@ func (s *Service) ListDir(_ context.Context, req *protogen.ListDirRequest) (*pro
 }
 
 func (s *Service) Unlink(_ context.Context, req *protogen.UnlinkRequest) (*protogen.UnlinkResponse, error) {
+	waitStart := time.Now()
 	s.mu.Lock()
+	metrics.ObserveMDSLockContention(time.Since(waitStart))
 	defer s.mu.Unlock()
 
 	children, ok := s.dirents[req.GetParentInodeId()]
