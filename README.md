@@ -97,6 +97,61 @@ make prom-metrics
 make smoke
 ```
 
+## Live Demo Validation Checklist
+I use this checklist before every local demo so I can prove the system is live end-to-end.
+
+1. Verify prerequisite and build health:
+```bash
+make doctor
+make build-day3
+make smoke
+```
+Expected: no failures, and `TestDay2MDSAndOSTFlow` passes.
+
+2. Verify observability stack is running:
+```bash
+make observability-up
+kubectl -n kube-pfs-observability get pods
+```
+Expected: Prometheus and Grafana pods are `Running`.
+
+3. Verify Prometheus can scrape local services:
+```bash
+make prom-targets
+```
+Expected: `host.docker.internal:9101`, `9102`, `9103`, and `9104` show `health: "up"`.
+
+4. Generate live metrics and benchmark data:
+```bash
+make seed-metrics N=50
+make benchmark
+```
+Expected: seed command succeeds, and benchmark artifacts are written to `artifacts/bench/<timestamp>/`.
+
+5. Generate fault events:
+```bash
+POD=$(kubectl -n kube-pfs-observability get pod -l app=kube-pfs-grafana -o jsonpath='{.items[0].metadata.name}')
+make fault-delete POD=$POD NAMESPACE=kube-pfs-observability
+mkdir -p artifacts/faults
+dd if=/dev/zero of=artifacts/faults/demo.blk bs=1024 count=1
+make fault-corrupt PATH_TO_BLOCK=artifacts/faults/demo.blk CORRUPT_BYTES=128
+```
+Expected: both fault commands return `succeeded`.
+
+6. Verify API endpoints consumed by the UI:
+```bash
+curl -sS http://127.0.0.1:8088/api/status | jq .
+curl -sS http://127.0.0.1:8088/api/benchmarks/latest | jq .
+curl -sS http://127.0.0.1:8088/api/faults | jq .
+curl -sS 'http://127.0.0.1:8088/api/prometheus?expr=sum(pfs_iops_total)' | jq .
+```
+Expected: non-empty JSON responses with live values/events.
+
+7. Final visual check in browser:
+- Open `http://127.0.0.1:8088`
+- Hard refresh once (`Cmd+Shift+R`)
+- Confirm cluster status, benchmark numbers, fault timeline, and metrics cards all populate.
+
 ## Project Structure
 ```text
 kube-pfs/
@@ -156,4 +211,3 @@ For UI screenshots, add image files under `docs/screenshots/` and reference them
 
 ## Contributing
 Pull requests are welcome. For major changes, open an issue first to discuss design and scope.
-
