@@ -1,161 +1,159 @@
-# kube-pfs
+# kube-pfs: Kubernetes CSI Driver for a Simulated Parallel File System
 
-I am building `kube-pfs`, a Kubernetes CSI driver project for a simulated parallel file system.  
-I am developing it in small, reviewable steps so I can test and explain each part before moving forward.
+## Description
+`kube-pfs` is a local-first learning project that simulates a parallel file system architecture behind a Kubernetes CSI-style workflow.
+It separates metadata operations (MDS) from block data operations (OST), then exposes observability, benchmarking, and fault-injection tooling around that path.
+The goal is to practice and demonstrate CSI-oriented systems thinking, not just build a basic storage demo.
+It helps explain how storage control/data planes, runtime metrics, and failure behavior come together in one workflow.
 
-## Why I am building this
+## Features
+- Metadata service (`Create`, `Lookup`, `Stat`, `ListDir`, `Unlink`) with BoltDB persistence.
+- Object storage service (`WriteBlock`, `ReadBlock`, `DeleteBlock`, `GetHealth`) using flat-file blocks.
+- CSI controller/node service implementation for local MVP behavior.
+- Prometheus metrics across MDS, OST, CSI, and fault-injection events.
+- Grafana-compatible dashboard JSON for Day 3 observability panels.
+- Benchmark runner with `fio` profiles and optional `mdtest`.
+- Fault injector CLI (`delete-pod`, `netem-delay`, `corrupt-block`) with timeline logging.
+- Demo UI to present cluster status, metrics snapshots, benchmark summaries, and fault history.
 
-I want this project to demonstrate hands-on understanding of:
+## Tech Stack
+- Go
+- gRPC + Protocol Buffers
+- BoltDB (`go.etcd.io/bbolt`)
+- Docker + kind + kubectl
+- Prometheus + Grafana
+- `fio` (and optional `mdtest`)
+- GitHub Actions
 
-- CSI controller and node plugin behavior in Kubernetes
-- metadata/data plane separation (MDS + OST model)
-- FUSE and mount workflow integration
-- observability, benchmarking, and fault behavior
-
-## Current status
-
-I have completed Day 1 groundwork, Day 2 MVP development, and Day 3 implementation.
-
-### Day 1 groundwork
-
-- local prerequisites and environment checks
-- setup automation scripts
-- kind cluster bootstrap manifests
-- repository scaffolding
-- protobuf API contracts for MDS and OST services
-- sanity checks for tooling, proto reproducibility, and smoke image builds
-
-### Day 2 MVP
-
-- Metadata service (`Create`, `Lookup`, `Stat`, `ListDir`, `Unlink`) with BoltDB-backed persistence
-- Object storage service (`WriteBlock`, `ReadBlock`, `DeleteBlock`, `GetHealth`) with flat-file block storage
-- CSI controller and node service binaries for local iteration
-- Day 2 smoke test for create/write/read/unlink behavior
-
-### Day 3 implementation
-
-- Prometheus metrics endpoints on MDS, OST, CSI controller, and CSI node
-- Metrics emitted for write latency, read throughput, IOPS, CSI ops, and MDS lock contention
-- Fault injector CLI for pod kill, netem delay, and block corruption with timeline logging
-- Benchmark runner (`fio` + optional `mdtest`) with timestamped artifacts
-- GitHub Actions for CI checks and scheduled/manual benchmark artifacts
-- Operations runbook and observability manifests
-
-## Target architecture
-
-```text
-Pods
-  -> CSI Node Plugin (mount path)
-  -> MetadataService (MDS)
-  -> ObjectStorageService (OST shards)
-  -> Prometheus/Grafana + benchmark/fault tooling
+## Installation
+1. Clone the repository:
+```bash
+git clone <your-repo-url>
+cd kube-pfs
 ```
 
-## Repository layout
-
-- `cmd/`: binary entrypoints (`mds`, `ost`, `csi-controller`, `csi-node`)
-- `proto/`: protobuf contracts
-- `pkg/proto/gen/`: generated Go stubs
-- `deploy/k8s/`: local cluster and namespace manifests
-- `scripts/dev/`: setup and sanity scripts
-- `hack/docker/smoke/`: smoke container assets
-- `docs/`: prerequisites, contracts, conventions, sanity notes
-
-## Local quickstart (my workflow)
-
-1. Install dependencies:
-
+2. Install local development tools (macOS helper):
 ```bash
 ./scripts/dev/bootstrap-macos.sh
 ```
 
-2. Validate prerequisites:
-
+3. Verify prerequisites:
 ```bash
 make doctor
 ```
 
-3. Bring up local cluster:
-
+4. Run baseline sanity checks:
 ```bash
-make cluster-up
-make ns-init
-```
-
-4. Validate contracts and baseline checks:
-
-```bash
-make proto-gen
-make compile-check
 make sanity
 ```
 
-5. Tear down when done:
-
+## Usage
+1. Build project binaries:
 ```bash
-make cluster-down
+make build-day3
 ```
 
-## Commands I use most
-
-- `make print-required-versions`
-- `make check-prereqs`
-- `make doctor`
-- `make install-tools-macos`
-- `make cluster-up`
-- `make cluster-down`
-- `make ns-init`
-- `make proto-gen`
-- `make compile-check`
-- `make sanity`
-- `make build-day2`
-- `make build-day3`
-- `make smoke`
-- `make observability-up`
-- `make benchmark`
-- `make fault-delete POD=kube-pfs-grafana-abcde NAMESPACE=kube-pfs-observability`
-- `make fault-netem POD=ost-0 NAMESPACE=kube-pfs-system DELAY=250ms`
-- `make fault-corrupt PATH_TO_BLOCK=artifacts/faults/demo.blk CORRUPT_BYTES=512`
-- `make fault-timeline`
-- `make fault-timeline-follow`
-- `make fault-timeline-clear`
-
-## Troubleshooting notes
-
-### Go missing
-
+2. Start local Kubernetes and observability:
 ```bash
-brew install go
-go version
-make check-prereqs
+make cluster-up
+make ns-init
+make observability-up
 ```
 
-### Protobuf plugins missing
-
+3. Start project services (run each in a separate terminal):
 ```bash
-go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.0
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
-export PATH="$(go env GOPATH)/bin:$PATH"
+GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go run ./cmd/mds --listen :50051 --metrics-listen :9101
+```
+```bash
+GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go run ./cmd/ost --ost-id ost-0 --listen :50061 --metrics-listen :9102 --data-dir ./data/ost0
+```
+```bash
+GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go run ./cmd/csi-controller --endpoint unix:///tmp/kube-pfs-csi-controller.sock --metrics-listen :9103
+```
+```bash
+GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go run ./cmd/csi-node --endpoint unix:///tmp/kube-pfs-csi-node.sock --metrics-listen :9104
 ```
 
-### Docker daemon not reachable
-
+4. Start the demo UI:
 ```bash
-docker info
+make demo-ui
 ```
 
-If that fails, I start Docker Desktop and rerun sanity checks.
-
-### kind missing
-
+5. Generate live data for dashboards:
 ```bash
-brew install kind
-kind version
+make seed-metrics N=50
+make benchmark
 ```
 
-## How I am working
+6. Open:
+- `http://127.0.0.1:8088` (demo UI)
+- `http://127.0.0.1:9090` (Prometheus)
+- `http://127.0.0.1:3000` (Grafana)
 
-- I move step-by-step with approval gates.
-- I run local checks before starting new implementation work.
-- I keep comments practical and human, focused on intent and tradeoffs.
-- I push incremental commits with sensible scope.
+7. Useful validation commands:
+```bash
+make prom-targets
+make prom-metrics
+make smoke
+```
+
+## Project Structure
+```text
+kube-pfs/
+├── cmd/
+│   ├── csi-controller/
+│   ├── csi-node/
+│   ├── demo-ui/
+│   ├── fault-injector/
+│   ├── mds/
+│   ├── ost/
+│   └── seed-metrics/
+├── pkg/
+│   ├── csi/
+│   ├── mds/
+│   ├── metrics/
+│   ├── ost/
+│   └── proto/gen/
+├── proto/
+├── deploy/
+│   ├── k8s/
+│   └── observability/
+├── benchmarks/
+├── scripts/
+├── tests/
+├── docs/
+├── Makefile
+└── README.md
+```
+
+## Example Output / Screenshots
+Example smoke test output:
+```text
+=== RUN   TestDay2MDSAndOSTFlow
+--- PASS: TestDay2MDSAndOSTFlow (0.03s)
+PASS
+ok      github.com/.../tests/smoke
+```
+
+Example benchmark output:
+```text
+Day 3 benchmark artifacts written to .../artifacts/bench/<timestamp>
+```
+
+Example fault timeline event (`artifacts/faults/timeline.jsonl`):
+```json
+{"timestamp":"2026-02-24T04:40:41Z","action":"corrupt-block","status":"ok","detail":"corrupt-block completed"}
+```
+
+For UI screenshots, add image files under `docs/screenshots/` and reference them here.
+
+## Future Improvements
+- Replace current CSI MVP behavior with full end-to-end Kubernetes CSI deployment objects for MDS/OST/CSI services.
+- Add real FUSE mount integration in the node path.
+- Expand failure-path tests and automate them in CI.
+- Add deeper performance reports (latency percentiles and trend comparison across runs).
+- Add packaged one-command demo launcher for local presentations.
+
+## Contributing
+Pull requests are welcome. For major changes, open an issue first to discuss design and scope.
+

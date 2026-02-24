@@ -1,0 +1,222 @@
+:root {
+  --bg: #f6f2e9;
+  --bg-soft: #efe8db;
+  --ink: #1e2430;
+  --ink-soft: #4e586a;
+  --accent-a: #0f8a7b;
+  --accent-b: #f26b38;
+  --card: rgba(255, 255, 255, 0.78);
+  --stroke: rgba(30, 36, 48, 0.12);
+  --shadow: 0 18px 40px rgba(25, 34, 49, 0.12);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(170deg, var(--bg) 0%, #fffaf1 45%, var(--bg-soft) 100%);
+  color: var(--ink);
+  font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+  overflow-x: hidden;
+}
+
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(15, 138, 123, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 138, 123, 0.06) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+.bg-glow {
+  background:
+    radial-gradient(900px 300px at 20% 15%, rgba(242, 107, 56, 0.18), transparent 60%),
+    radial-gradient(1000px 340px at 80% 25%, rgba(15, 138, 123, 0.18), transparent 60%);
+}
+
+.app-shell {
+  position: relative;
+  width: min(1160px, 92vw);
+  margin: 0 auto;
+  padding: 2.2rem 0 2rem;
+}
+
+.hero {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  padding: 1.8rem 1.6rem;
+  backdrop-filter: blur(8px);
+}
+
+.kicker {
+  margin: 0;
+  font-size: 0.84rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-a);
+  font-weight: 700;
+}
+
+h1 {
+  margin: 0.55rem 0 0.7rem;
+  font-family: "Bricolage Grotesque", "Trebuchet MS", sans-serif;
+  font-size: clamp(1.6rem, 4.4vw, 2.8rem);
+  line-height: 1.1;
+}
+
+.sub {
+  margin: 0;
+  max-width: 72ch;
+  color: var(--ink-soft);
+}
+
+.hero-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.hero-actions a {
+  text-decoration: none;
+  color: #fff;
+  background: linear-gradient(90deg, var(--accent-a), #17a897);
+  padding: 0.62rem 0.92rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.hero-actions a:last-child {
+  background: linear-gradient(90deg, var(--accent-b), #ff8b3d);
+}
+
+.cards {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 1rem;
+  backdrop-filter: blur(8px);
+}
+
+.card h2 {
+  margin: 0 0 0.7rem;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.16rem;
+}
+
+.value {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.muted {
+  margin: 0.45rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.93rem;
+}
+
+.component-list,
+.timeline-list {
+  margin: 0.7rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.component-list li,
+.timeline-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed rgba(30, 36, 48, 0.12);
+  font-size: 0.9rem;
+}
+
+.component-list li:last-child,
+.timeline-list li:last-child { border-bottom: 0; }
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.metric-grid div {
+  padding: 0.7rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(30, 36, 48, 0.08);
+}
+
+.metric-grid span {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.metric-grid strong {
+  font-size: 1.06rem;
+  font-family: "IBM Plex Mono", "SF Mono", monospace;
+}
+
+.benchmark-grid strong { color: #0f6f69; }
+
+.timeline-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: "IBM Plex Mono", monospace;
+  text-transform: uppercase;
+  font-size: 0.73rem;
+}
+
+.timeline-status.ok { color: #116f59; }
+.timeline-status.error { color: #9a2f1a; }
+
+footer {
+  margin-top: 1rem;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: riseIn 520ms ease-out forwards;
+}
+
+.reveal.delay-1 { animation-delay: 120ms; }
+.reveal.delay-2 { animation-delay: 220ms; }
+.reveal.delay-3 { animation-delay: 320ms; }
+
+@keyframes riseIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 920px) {
+  .cards { grid-template-columns: 1fr; }
+  .hero { padding: 1.2rem 1rem; }
+  .metric-grid { grid-template-columns: 1fr; }
+}

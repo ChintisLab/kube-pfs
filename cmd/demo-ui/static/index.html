@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>kube-pfs Demo Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;700;800&family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="bg-layer bg-grid"></div>
+    <div class="bg-layer bg-glow"></div>
+
+    <main class="app-shell">
+      <header class="hero reveal">
+        <p class="kicker">kube-pfs / Day 3 Demo</p>
+        <h1>I built this demo console to explain my system live.</h1>
+        <p class="sub">
+          I use this page during demos to show cluster health, benchmark outputs,
+          fault history, and real Prometheus snapshots in one place.
+        </p>
+        <div class="hero-actions">
+          <a id="promLink" target="_blank" rel="noreferrer">Open Prometheus</a>
+          <a id="grafanaLink" target="_blank" rel="noreferrer">Open Grafana</a>
+        </div>
+      </header>
+
+      <section class="cards reveal delay-1">
+        <article class="card status-card">
+          <h2>Cluster Status</h2>
+          <p id="clusterConnectivity" class="value">Loading...</p>
+          <p id="obsHealth" class="muted"></p>
+          <ul id="componentList" class="component-list"></ul>
+        </article>
+
+        <article class="card metrics-card">
+          <h2>Live Metrics Snapshot</h2>
+          <div class="metric-grid">
+            <div><span>Write Latency p95</span><strong id="metricWriteP95">--</strong></div>
+            <div><span>Read Throughput</span><strong id="metricReadThroughput">--</strong></div>
+            <div><span>IOPS</span><strong id="metricIops">--</strong></div>
+            <div><span>MDS Contention p95</span><strong id="metricLockP95">--</strong></div>
+          </div>
+          <p id="promHint" class="muted"></p>
+        </article>
+      </section>
+
+      <section class="cards reveal delay-2">
+        <article class="card benchmark-card">
+          <h2>Latest Benchmark Run</h2>
+          <p id="benchRunId" class="muted"></p>
+          <div class="metric-grid benchmark-grid">
+            <div><span>Seq Read MB/s</span><strong id="benchSeqRead">--</strong></div>
+            <div><span>Seq Write MB/s</span><strong id="benchSeqWrite">--</strong></div>
+            <div><span>Rand Read IOPS</span><strong id="benchRandRead">--</strong></div>
+            <div><span>Rand Write IOPS</span><strong id="benchRandWrite">--</strong></div>
+          </div>
+          <p id="benchMetadata" class="muted"></p>
+        </article>
+
+        <article class="card timeline-card">
+          <h2>Fault Timeline</h2>
+          <div id="timelineEmpty" class="muted">No fault events yet.</div>
+          <ul id="timelineList" class="timeline-list"></ul>
+        </article>
+      </section>
+
+      <footer class="reveal delay-3">
+        <p>I refresh this panel every 6 seconds during demos.</p>
+      </footer>
+    </main>
+
+    <script src="./app.js?v=20260224-2" defer></script>
+  </body>
+</html>

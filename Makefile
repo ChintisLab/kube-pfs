@@ -21,6 +21,8 @@ GO_ENV := GOCACHE=$(GO_CACHE_DIR) GOMODCACHE=$(GO_MOD_CACHE_DIR)
 .PHONY: build-day2 build-day3 smoke
 .PHONY: observability-up benchmark fault-delete fault-netem fault-corrupt
 .PHONY: fault-timeline fault-timeline-follow fault-timeline-clear
+.PHONY: build-demo-ui demo-ui
+.PHONY: seed-metrics prom-targets prom-metrics
 
 print-required-versions:
 	@echo "Required versions (minimum unless noted):"
@@ -173,7 +175,20 @@ build-day2:
 build-day3:
 	@set -euo pipefail; \
 	mkdir -p "$(GO_CACHE_DIR)" "$(GO_MOD_CACHE_DIR)"; \
-	$(GO_ENV) go build ./cmd/mds ./cmd/ost ./cmd/csi-controller ./cmd/csi-node ./cmd/fault-injector
+	$(GO_ENV) go build ./cmd/mds ./cmd/ost ./cmd/csi-controller ./cmd/csi-node ./cmd/fault-injector ./cmd/demo-ui ./cmd/seed-metrics
+
+build-demo-ui:
+	@set -euo pipefail; \
+	mkdir -p "$(GO_CACHE_DIR)" "$(GO_MOD_CACHE_DIR)"; \
+	$(GO_ENV) go build ./cmd/demo-ui
+
+demo-ui:
+	@set -euo pipefail; \
+	./scripts/dev/demo-ui.sh
+
+seed-metrics:
+	@set -euo pipefail; \
+	$(GO_ENV) go run ./cmd/seed-metrics -n $${N:-15}
 
 smoke:
 	@set -euo pipefail; \
@@ -183,6 +198,19 @@ observability-up:
 	@set -euo pipefail; \
 	kubectl apply -f deploy/observability/prometheus.yaml; \
 	kubectl apply -f deploy/observability/grafana.yaml
+
+prom-targets:
+	@set -euo pipefail; \
+	curl -s http://127.0.0.1:9090/api/v1/targets | jq '.data.activeTargets[] | {scrapeUrl: .scrapeUrl, health: .health, lastError: .lastError}'
+
+prom-metrics:
+	@set -euo pipefail; \
+	echo \"-- metric names\"; \
+	curl -s 'http://127.0.0.1:9090/api/v1/label/__name__/values' | jq -r '.data[]' | grep '^pfs_' || true; \
+	echo \"-- iops total\"; \
+	curl -s 'http://127.0.0.1:9090/api/v1/query?query=sum(pfs_iops_total)' | jq '.data.result'; \
+	echo \"-- read throughput rate\"; \
+	curl -s 'http://127.0.0.1:9090/api/v1/query?query=sum(rate(pfs_read_throughput_bytes%5B5m%5D))' | jq '.data.result'
 
 benchmark:
 	@set -euo pipefail; \

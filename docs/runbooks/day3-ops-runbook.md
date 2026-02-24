@@ -74,7 +74,27 @@ I clear old events before a fresh test with:
 make fault-timeline-clear
 ```
 
-### 7) Tear down
+### 7) Prime and verify Prometheus metrics
+
+I generate synthetic traffic for demo metrics with:
+
+```bash
+make seed-metrics N=20
+```
+
+I inspect scrape health with:
+
+```bash
+make prom-targets
+```
+
+I inspect key `pfs_*` metric presence with:
+
+```bash
+make prom-metrics
+```
+
+### 8) Tear down
 
 ```bash
 make cluster-down

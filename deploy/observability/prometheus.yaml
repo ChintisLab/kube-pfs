@@ -13,6 +13,13 @@ data:
     global:
       scrape_interval: 10s
     scrape_configs:
+      - job_name: kube-pfs-local-host
+        static_configs:
+          - targets:
+              - "host.docker.internal:9101"
+              - "host.docker.internal:9102"
+              - "host.docker.internal:9103"
+              - "host.docker.internal:9104"
       - job_name: kube-pfs-mds
         static_configs:
           - targets: ["kube-pfs-mds.kube-pfs-system.svc.cluster.local:9101"]
