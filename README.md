@@ -28,7 +28,7 @@ It helps explain how storage control/data planes, runtime metrics, and failure b
 ## Installation
 1. Clone the repository:
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/ChintisLab/kube-pfs.git
 cd kube-pfs
 ```
 
@@ -200,7 +200,19 @@ Example fault timeline event (`artifacts/faults/timeline.jsonl`):
 {"timestamp":"2026-02-24T04:40:41Z","action":"corrupt-block","status":"ok","detail":"corrupt-block completed"}
 ```
 
-For UI screenshots, add image files under `docs/screenshots/` and reference them here.
+Live demo screenshots (I keep these under `docs/screenshots/`):
+- `docs/screenshots/demo-ui-live.png`
+- `docs/screenshots/prometheus-iops-graph.png`
+- `docs/screenshots/prometheus-targets-status.png`
+
+Reference document (I added this under `docs/references/`):
+- [Prometheus Time Series Collection and Processing Server (PDF)](docs/references/prometheus-time-series-collection-and-processing-server.pdf)
+
+## Known Limitations
+- I currently run MDS, OST, and CSI services as local processes for development, not as in-cluster Kubernetes workloads.
+- I currently scrape `host.docker.internal` targets for live metrics; the `kube-pfs-*.svc.cluster.local` scrape entries stay down until I deploy those services in-cluster.
+- I currently use an MVP CSI node path and have not completed full FUSE mount integration yet.
+- I currently focus on a single-node local demo workflow; full HA and production hardening are still future work.
 
 ## Future Improvements
 - Replace current CSI MVP behavior with full end-to-end Kubernetes CSI deployment objects for MDS/OST/CSI services.
